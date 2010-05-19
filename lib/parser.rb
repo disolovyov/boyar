@@ -130,8 +130,12 @@ class Parser
   def parse_dostavlase
     next_lexeme_expected
     parse_expression
-    @emitter.emit(:frame_up)
-    @emitter.emit(:return)
+    if Scope.top.parent
+      @emitter.emit(:frame_up)
+      @emitter.emit(:return)
+    else
+      @emitter.emit(:halt)
+    end
   end
   
   def parse_oi

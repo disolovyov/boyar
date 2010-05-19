@@ -1,5 +1,6 @@
 class Scope
   @@top = nil
+  attr_reader :parent
   
   def initialize
     @parent = @@top
