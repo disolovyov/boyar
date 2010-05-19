@@ -24,4 +24,8 @@ class Scope
   def close
     @@top = @parent
   end
+  
+  def self.top
+    @@top
+  end
 end
