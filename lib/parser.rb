@@ -121,8 +121,8 @@ class Parser
     elsif lexeme_is_static(',') then next_lexeme_expected
     else
       grammar_error(
-        '%s "бьюсь", "ой", "паче", "покуда", "пущай", "узрите" али ","' %
-        boyar_class(:static)
+        ('%s "доставляше", "ой", "сотворим", "паче", "покуда", "пущай", ' +
+        '"узрите" али ","') % boyar_class(:static)
       )
     end
   end
