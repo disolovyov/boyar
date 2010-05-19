@@ -1,8 +1,10 @@
 class Interpreter
   def run(pcode)
     @stack = []
-    @identifiers = []
-    @frame = 0
+    @calls = []
+    @variables = {}
+    @frames = []
+    @frame_offset = 0
     @pointer = 0
     while pcode[@pointer][:proc] != :halt
       if pcode[@pointer][:arg]
@@ -29,6 +31,11 @@ class Interpreter
     int(arg) != 0
   end
   
+  def call(arg)
+    @calls.push(@pointer)
+    jump(arg)
+  end
+  
   def concatenate
     arg = pop.to_s
     push(pop.to_s + arg)
@@ -44,15 +51,17 @@ class Interpreter
   end
   
   def frame_down
-    @frame += 1
+    @frames.push(@frame_offset)
+    @frame_offset = @variables.size
   end
   
   def frame_shift
-    @stack.push(@frame)
+    @stack.push(@frame_offset)
   end
   
   def frame_up
-    @frame -= 1
+    @frame_offset = @frames.pop
+    @variables.reject! {|key| key >= @frame_offset }
   end
   
   def greater
@@ -99,7 +108,7 @@ class Interpreter
   end
   
   def load
-    push(@identifiers[pop])
+    push(@variables[pop])
   end
   
   def modulo
@@ -135,9 +144,13 @@ class Interpreter
     @stack.push(arg)
   end
   
+  def return
+    jump(@calls.pop)
+  end
+  
   def store
     arg = pop
-    @identifiers[pop] = arg
+    @variables[pop] = arg
   end
   
   def subtract
