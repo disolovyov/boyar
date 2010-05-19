@@ -179,7 +179,8 @@ class Interpreter
   end
   
   def subtract
-    push(int(pop) - int(pop))
+    arg = int(pop)
+    push(int(pop) - arg)
   end
   
   # End of run-time functions
