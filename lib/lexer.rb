@@ -69,9 +69,7 @@ class Lexer
       @word = @word[1..-2]
       push_table(:constant)
     when :comment
-      if COMMENT_END.include? @char
-        push_delimiter
-      else
+      unless COMMENT_END.include? @char
         @new_state = :comment
       end
     end
