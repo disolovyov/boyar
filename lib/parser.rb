@@ -281,9 +281,9 @@ class Parser
   
   def boyar_class(_class)
     case _class
-    when :identifier then 'имя'
+    when :identifier then 'благо'
     when :static then 'начертание'
-    when :constant then 'благо'
+    when :constant then 'слово'
     else ''
     end
   end
