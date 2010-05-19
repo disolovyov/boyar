@@ -29,6 +29,14 @@ class Emitter
     @addresses[address] = @pcode.size
   end
   
+  def emit_var(var)
+    emit(:push, var[:offset])
+    unless var[:global]
+      emit(:frame_shift)
+      emit(:add)
+    end
+  end
+  
   def locate
     @pcode.size
   end
