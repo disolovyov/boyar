@@ -6,6 +6,7 @@ class Emitter
     @pcode = []
     @relocations = []
     @addresses = []
+    @functions = {}
     @built = false
   end
   
@@ -35,6 +36,28 @@ class Emitter
       emit(:frame_shift)
       emit(:add)
     end
+  end
+  
+  def function_declared(id)
+    @addresses[@functions[id]] if @functions.include?(id)
+  end
+  
+  def set_function(id)
+    unless @functions.include?(id)
+      @functions[id] = @addresses.size
+      @addresses += [nil]
+    end
+  end
+  
+  def emit_function(id)
+    set_function(id)
+    @addresses[@functions[id]] = @pcode.size
+  end
+  
+  def emit_call(id)
+    set_function(id)
+    @relocations += [@pcode.size]
+    emit(:call, @functions[id])
   end
   
   def locate

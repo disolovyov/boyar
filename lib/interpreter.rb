@@ -32,7 +32,7 @@ class Interpreter
   end
   
   def call(arg)
-    @calls.push(@pointer)
+    @calls.push(@pointer + 1)
     jump(arg)
   end
   
@@ -149,8 +149,7 @@ class Interpreter
   end
   
   def store
-    arg = pop
-    @variables[pop] = arg
+    @variables[pop] = pop
   end
   
   def subtract

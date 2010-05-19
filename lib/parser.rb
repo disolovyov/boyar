@@ -72,16 +72,19 @@ class Parser
     parse_static('челом')
     parse_static('за')
     grammar_error(boyar_class(:identifier)) unless lexeme_is(:identifier)
+    id = @lexer.identifiers.index(@lexeme[:word])
+    redeclared_error if @emitter.function_declared(id)
     next_lexeme_expected
     Scope.new
     arg = @emitter.emit_relocated(:jump)
-    @emitter.emit(:frame_up)
+    @emitter.emit_function(id)
+    @emitter.emit(:frame_down)
     parse_locals
     parse_static(',')
     parse_statement_until('убо')
     next_lexeme_expected
     @emitter.emit(:push, 0)
-    @emitter.emit(:frame_down)
+    @emitter.emit(:frame_up)
     @emitter.emit(:return)
     @emitter.emit_label(arg)
     Scope.top.close
@@ -99,7 +102,7 @@ class Parser
     end
     vars.reverse.each do |var|
       @emitter.emit_variable(var)
-      @emitter.emit(:load)
+      @emitter.emit(:store)
     end
   end
   
@@ -127,7 +130,7 @@ class Parser
   def parse_dostavlase
     next_lexeme_expected
     parse_expression
-    @emitter.emit(:frame_down)
+    @emitter.emit(:frame_up)
     @emitter.emit(:return)
   end
   
@@ -158,8 +161,8 @@ class Parser
     if lexeme_is_static('допреж')
       next_lexeme_expected
       parse_static('того')
-      @emitter.emit_variable(var)
       parse_expression
+      @emitter.emit_variable(var)
       @emitter.emit(:store)
     end
   end
@@ -188,9 +191,12 @@ class Parser
   
   def parse_pusai
     next_lexeme_expected
-    parse_identifier
+    grammar_error(boyar_class(:identifier)) unless lexeme_is(:identifier)
+    lexeme = @lexeme
+    next_lexeme_expected
     parse_static('знаменует')
     parse_expression
+    parse_variable(lexeme)
     @emitter.emit(:store)
   end
   
@@ -321,19 +327,24 @@ class Parser
     lexeme = @lexeme
     next_lexeme_expected
     if lexeme_is_static(['деяши', 'с'])
-      if lexeme_is_static('с')
-        while lexeme_is_static('с')
-          next_lexeme_expected
-          parse_expression
-        end
-        parse_static('твориши')
-      else
-        parse_static('деяши')
-      end
+      parse_function_call(lexeme)
     else
       parse_variable(lexeme)
       @emitter.emit(:load)
     end
+  end
+  
+  def parse_function_call(lexeme)
+    if lexeme_is_static('с')
+      while lexeme_is_static('с')
+        next_lexeme_expected
+        parse_expression
+      end
+      parse_static('твориши')
+    else
+      parse_static('деяши')
+    end
+    @emitter.emit_call(@lexer.identifiers.index(lexeme[:word]))
   end
   
   def parse_item_constant
@@ -351,12 +362,6 @@ class Parser
     unless lexeme_is_static(word)
       grammar_error('%s "%s"' % [boyar_class(:static), word])
     end
-    next_lexeme_expected
-  end
-
-  def parse_identifier
-    grammar_error(boyar_class(:identifier)) unless lexeme_is(:identifier)
-    parse_variable(@lexeme)
     next_lexeme_expected
   end
   
@@ -396,6 +401,15 @@ class Parser
   def undeclared_error
     raise BoyarError,
       'Незаявленное благо "%s" на строке %d в столбце %d!' % [
+        @lexeme[:word],
+        @lexeme[:line_number],
+        @lexeme[:col_number]
+      ]
+  end
+  
+  def redeclared_error
+    raise BoyarError,
+      'Виданное благо "%s" на строке %d в столбце %d!' % [
         @lexeme[:word],
         @lexeme[:line_number],
         @lexeme[:col_number]
