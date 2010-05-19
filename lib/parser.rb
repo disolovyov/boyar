@@ -3,9 +3,9 @@ require 'enumerator'
 require 'error'
 
 class Parser
-  def initialize(lexer, interpreter)
+  def initialize(lexer, emitter)
     @lexer = lexer
-    @interpreter = interpreter
+    @emitter = emitter
     @status = '[ Летопись нетронута ]'
   end
   
@@ -49,7 +49,7 @@ class Parser
       termination_error unless lexeme_is_static(',')
       next_lexeme
     end
-    @interpreter.emit(:halt)
+    @emitter.emit(:halt)
     @status = '[ Летопись прочитана ]'
     self
   end
@@ -84,9 +84,9 @@ class Parser
       parse_static('того')
       parse_expression
     else
-      @interpreter.emit(:push)
+      @emitter.emit(:push)
     end
-    @interpreter.emit(:store)
+    @emitter.emit(:store)
   end
   
   def parse_pusai
@@ -94,13 +94,13 @@ class Parser
     parse_identifier
     parse_static('знаменует')
     parse_expression
-    @interpreter.emit(:store)
+    @emitter.emit(:store)
   end
   
   def parse_uzrite
     next_lexeme_expected
     parse_expression
-    @interpreter.emit(:print)
+    @emitter.emit(:print)
   end
   
   def parse_oi
@@ -108,40 +108,40 @@ class Parser
     parse_static('ли')
     parse_expression
     parse_static(',')
-    arg = @interpreter.emit_relocated(:jump_false)
+    arg = @emitter.emit_relocated(:jump_false)
     parse_statement_until(['коли', 'убо'])
     if lexeme_is_static('коли')
       next_lexeme_expected
       parse_static('не')
-      arg_new = @interpreter.emit_relocated(:jump)
-      @interpreter.emit_label(arg)
+      arg_new = @emitter.emit_relocated(:jump)
+      @emitter.emit_label(arg)
       arg = arg_new
       parse_statement_until('убо')
     end
     next_lexeme_expected
-    @interpreter.emit_label(arg)
+    @emitter.emit_label(arg)
   end
   
   def parse_pokuda
     next_lexeme_expected
-    return_to = @interpreter.locate
+    return_to = @emitter.locate
     parse_expression
     parse_static(',')
-    arg = @interpreter.emit_relocated(:jump_false)
+    arg = @emitter.emit_relocated(:jump_false)
     parse_statement_until('убо')
     next_lexeme_expected
-    @interpreter.emit(:jump, return_to)
-    @interpreter.emit_label(arg)
+    @emitter.emit(:jump, return_to)
+    @emitter.emit_label(arg)
   end
   
   def parse_pace
     next_lexeme_expected
     parse_static(',')
-    arg = @interpreter.locate
+    arg = @emitter.locate
     parse_statement_until('покамест')
     next_lexeme_expected
     parse_expression
-    @interpreter.emit(:jump_true, arg)
+    @emitter.emit(:jump_true, arg)
   end
   
   def parse_expression
@@ -154,7 +154,7 @@ class Parser
       end
       next_lexeme_expected
       parse_equality
-      @interpreter.emit(proc)
+      @emitter.emit(proc)
     end
   end
   
@@ -170,7 +170,7 @@ class Parser
         proc = :equal
       end
       parse_comparable
-      @interpreter.emit(proc)
+      @emitter.emit(proc)
     end
   end
   
@@ -193,7 +193,7 @@ class Parser
         end
       end
       parse_arithmetic
-      @interpreter.emit(proc)
+      @emitter.emit(proc)
     end
   end
   
@@ -212,7 +212,7 @@ class Parser
         proc = :concatenate
       end
       parse_term
-      @interpreter.emit(proc)
+      @emitter.emit(proc)
     end
   end
   
@@ -228,7 +228,7 @@ class Parser
       end
       next_lexeme_expected
       parse_factor
-      @interpreter.emit(proc)
+      @emitter.emit(proc)
     end
   end
   
@@ -236,7 +236,7 @@ class Parser
     if lexeme_is_static('ни')
       next_lexeme_expected
       parse_factor
-      @interpreter.emit(:not)
+      @emitter.emit(:not)
     else
       parse_group
     end
@@ -244,11 +244,11 @@ class Parser
   
   def parse_group
     if lexeme_is(:identifier)
-      @interpreter.emit(:push, @lexer.identifiers.index(@lexeme[:word]))
-      @interpreter.emit(:load)
+      @emitter.emit(:push, @lexer.identifiers.index(@lexeme[:word]))
+      @emitter.emit(:load)
       next_lexeme_expected
     elsif lexeme_is(:constant)
-      @interpreter.emit(:push, @lexeme[:word])
+      @emitter.emit(:push, @lexeme[:word])
       next_lexeme_expected
     elsif lexeme_is_static('отселе')
       next_lexeme_expected
@@ -275,7 +275,7 @@ class Parser
 
   def parse_identifier
     grammar_error(boyar_class(:identifier)) unless lexeme_is(:identifier)
-    @interpreter.emit(:push, @lexer.identifiers.index(@lexeme[:word]))
+    @emitter.emit(:push, @lexer.identifiers.index(@lexeme[:word]))
     next_lexeme_expected
   end
   

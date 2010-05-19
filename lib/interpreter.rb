@@ -1,64 +1,13 @@
 class Interpreter
-  attr_accessor :identifiers
-  
-  def initialize
-    @code = []
-    @relocations = []
-    @addresses = []
-    @compiled = false
-  end
-  
-  def emit(proc, arg = nil)
-    @code += [
-      :proc => proc,
-      :arg => arg
-    ]
-  end
-  
-  def emit_relocated(proc)
-    @addresses += [nil]
-    arg = @addresses.size - 1
-    emit(proc, arg)
-    address = @code.size - 1
-    @relocations += [address]
-    arg
-  end
-  
-  def emit_label(address)
-    @addresses[address] = @code.size
-  end
-  
-  def relocate_labels
-    @relocations.each do |address|
-      @code[address][:arg] = @addresses[@code[address][:arg]]
-    end
-  end
-  
-  def locate
-    @code.size
-  end
-  
-  def optimize
-    self
-  end
-  
-  def compile
-    relocate_labels
-    optimize
-    @compiled = true
-    self
-  end
-  
-  def run
-    compile unless @compiled
+  def run(pcode)
     @stack = []
     @identifiers = []
     @pointer = 0
-    while @code[@pointer][:proc] != :halt
-      if @code[@pointer][:arg]
-        send(@code[@pointer][:proc], @code[@pointer][:arg])
+    while pcode[@pointer][:proc] != :halt
+      if pcode[@pointer][:arg]
+        send(pcode[@pointer][:proc], pcode[@pointer][:arg])
       else
-        send(@code[@pointer][:proc])
+        send(pcode[@pointer][:proc])
       end
       @pointer += 1
     end
@@ -183,19 +132,4 @@ class Interpreter
   end
   
   # End of run-time functions
-  
-  def to_s
-    pcode = ''
-    length = @code.size.to_s.size
-    i = 0
-    @code.each do |line|
-      if line[:arg]
-        pcode += "%%%dd: %%s, %%s\n" % length % [i, line[:proc], line[:arg]]
-      else
-        pcode += "%%%dd: %%s\n" % length % [i, line[:proc]]
-      end
-      i += 1
-    end
-    pcode
-  end
 end
