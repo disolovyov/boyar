@@ -19,7 +19,7 @@ class Parser
   end
 
   def lexeme_expected
-    unexpected_end unless @lexeme
+    termination_error unless @lexeme
   end
 
   def next_lexeme_expected
