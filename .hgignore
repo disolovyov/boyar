@@ -3,3 +3,7 @@ syntax: glob
 *~
 .DS_Store
 *.tmproj
+samples/*
+docs/*
+boyar.sh
+boyar.bat
