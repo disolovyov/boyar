@@ -2,6 +2,7 @@ class Interpreter
   def run(pcode)
     @stack = []
     @identifiers = []
+    @frame = 0
     @pointer = 0
     while pcode[@pointer][:proc] != :halt
       if pcode[@pointer][:arg]
@@ -40,6 +41,18 @@ class Interpreter
   
   def equal
     push(int(int(pop) == int(pop)))
+  end
+  
+  def frame_down
+    @frame += 1
+  end
+  
+  def frame_shift
+    @stack.push(@frame)
+  end
+  
+  def frame_up
+    @frame -= 1
   end
   
   def greater
