@@ -92,11 +92,13 @@ class Parser
     while lexeme_is_static('с')
       next_lexeme_expected
       grammar_error(boyar_class(:identifier)) unless lexeme_is(:identifier)
-      vars += [Scope.top.set(@lexer.identifiers.index(@lexeme[:word]))]
+      vars += [
+        Scope.top.set(@lexer.identifiers.index(@lexeme[:word]))
+      ]
       next_lexeme_expected
     end
     vars.reverse.each do |var|
-      @emitter.emit_var(var)
+      @emitter.emit_variable(var)
       @emitter.emit(:load)
     end
   end
@@ -156,7 +158,7 @@ class Parser
     if lexeme_is_static('допреж')
       next_lexeme_expected
       parse_static('того')
-      @emitter.emit_var(var)
+      @emitter.emit_variable(var)
       parse_expression
       @emitter.emit(:store)
     end
@@ -364,7 +366,7 @@ class Parser
       @lexeme = lexeme
       undeclared_error
     end
-    @emitter.emit_var(var)
+    @emitter.emit_variable(var)
   end
   
   def boyar_class(_class)

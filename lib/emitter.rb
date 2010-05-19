@@ -29,7 +29,7 @@ class Emitter
     @addresses[address] = @pcode.size
   end
   
-  def emit_var(var)
+  def emit_variable(var)
     emit(:push, var[:offset])
     unless var[:global]
       emit(:frame_shift)
